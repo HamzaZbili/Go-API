@@ -8,6 +8,10 @@ import (
 	// "github.com/go-chi/chi/v5/middleware"
 )
 
+type Notification struct {
+	Message string
+}
+
 func main() {
 	err := OpenDatabase()
 	if err != nil {

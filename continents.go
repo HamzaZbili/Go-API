@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http" // provides an HTTP client and server implementation
@@ -17,8 +16,21 @@ type CreateContinent struct {
 }
 
 func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	log.Print("all good here!")
+	// convention
+	// w - response writer 
+	// r - for request
+	var rootMessage Notification
+	rootMessage.Message = "all good here!"
+	response, err := json.Marshal(rootMessage.Message)
+	// Marshal() takes a Go value as an input and
+	// returns a byte slice and an error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error marshalling welcome message into json %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(response)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -35,10 +47,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("error decoding request from body into CreateContinent struct: %v", err)
+		return
 	}
 	// below assigns err to result from query
 	// returns error if var is nil
-	if err := DB.QueryRow("INSERT INTO Continents (name) VALUES ($1)", body.Name).Err(); err != nil {
+	if err := DB.QueryRow("INSERT INTO Continents (name) VALUES ($1);", body.Name).Err(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("StatusInternalServerError %v", err)
 		return
@@ -48,19 +61,37 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAll(w http.ResponseWriter, r *http.Request) {
-	var allContinents []Continent
-	if err := DB.QueryRowContext(context.Background(),"SELECT * FROM Continents").Err(); err!= nil {
-		w.WriteHeader(http.StatusInternalServerError)
+	rows, err := DB.Query("SELECT * FROM Continents;")
+	// queries all rows in continents
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("Error querying all continents: %v", err)
+		return
 	}
+	defer rows.Close() // releases any resources held by the rows
+	// rows returns continents as slice
 
-	response, err := json.Marshal(allContinents)
+	var continents []Continent
+
+	for rows.Next() {
+	// Next() iterates over rows
+		var continent Continent
+		if err := rows.Scan(&continent.Continent_id, &continent.Name); err != nil {
+		// Scan() reads values of current row
+		// receives pointers to where data will be passed to
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error loopin continents row: %v", err)
+		}
+		// appends to continents array
+		continents = append(continents, continent)
+	}
+	response, err := json.Marshal(continents)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("error marshalling continents into json %v", err)
 		return
 	}
-
+	w.WriteHeader(http.StatusAccepted)
 	w.Write(response)
 }
 
