@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS continents;
-DROP TABLE IF EXISTS countries;
+DROP TABLE IF EXISTS Continents;
+DROP TABLE IF EXISTS Countries;
 
 CREATE TABLE Continents (
     Continent_id serial,

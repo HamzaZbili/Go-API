@@ -7,7 +7,7 @@ import (
 	_ "github.com/lib/pq" // _ imports side effects
 )
 
-var DB *sql.DB
+var DB *sql.DB // pointer to sql.DB struct
 
 func OpenDatabase() error {
 	var err error

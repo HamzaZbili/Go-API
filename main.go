@@ -22,6 +22,11 @@ func main() {
 	// })
 
 	r.Post("/continents", Create)
+
+	r.Get("/", HealthCheck)
+
+	r.Get("/continents", GetAll)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
+
