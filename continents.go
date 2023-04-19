@@ -83,11 +83,12 @@ func GetOneContinent(w http.ResponseWriter, r *http.Request) {
 	// var continent Continent
 	queryResult := DB.QueryRow("SELECT Continent_id, name FROM Continents WHERE Continent_id = $1;", id)
 	var continent Continent
-	if err := queryResult.Scan(&continent.Continent_id, &continent.Name); err == sql.ErrNoRows {
-		// sql.ErrNoRows returned from Scan()
+	if err := queryResult.Scan(&continent.Continent_id, &continent.Name); err != nil{
+		w.WriteHeader(http.StatusNotFound)
 		fmt.Println("No rows found")
 		return
-	} else {
+	} else if err == sql.ErrNoRows {
+				// sql.ErrNoRows returned from Scan()
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("Error scanning continent row: %v", err)
 	}
@@ -100,6 +101,7 @@ func GetOneContinent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
+
 
 
 

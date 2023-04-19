@@ -49,7 +49,6 @@ func GetAllCountries(w http.ResponseWriter, r *http.Request) {
 	var countriesSlice []Country
 
 	for rows.Next() {
-	// Next() iterates over rows
 		var country Country
 		if err := rows.Scan(&country.Country_id,
 			&country.Name, &country.Poplation, &country.Capital,
@@ -68,3 +67,43 @@ func GetAllCountries(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(continentsToSend)
 }
+
+func GetCountriesInContinent(w http.ResponseWriter, r *http.Request) {
+	continentName := r.URL.Query().Get("name")
+	rows, err := DB.Query(
+	// c and ct in the SELECT statement are used an alias for the Countries and Continents tables
+	// using * here can make SQL queries less efficient and harder to maintain.
+		`SELECT c.Country_id, c.Name, c.Population, c.Capital, ct.Continent_id
+		FROM Countries c
+		INNER JOIN Continents ct ON c.Continent = ct.Continent_id
+		WHERE ct.Name = $1
+`, continentName)
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Error querying countries by continent name: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	var countriesSlice []Country
+
+	for rows.Next() {
+		var country Country
+		if err := rows.Scan(&country.Country_id,
+			&country.Name, &country.Poplation, &country.Capital,
+			&country.Continent); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error looping countries row: %v", err)
+		}
+		countriesSlice = append(countriesSlice, country)
+	}
+	continentsToSend, err := json.Marshal(countriesSlice)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error marshalling countries into json %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(continentsToSend)
+}
+

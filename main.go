@@ -33,7 +33,8 @@ func main() {
 	r.Get("/continents", GetOneContinent)
 
 	r.Post("/countries", CreateNewCountry)
-	r.Get("/countries", GetAllCountries)
+	r.Get("/countries/all", GetAllCountries)
+	r.Get("/countries", GetCountriesInContinent)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
@@ -41,7 +42,7 @@ func main() {
 func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	// convention
 	// w - response writer 
-	// r - for request
+	// r - request
 	var rootMessage Notification
 	rootMessage.Message = "all good here!"
 	response, err := json.Marshal(rootMessage.Message)
