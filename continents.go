@@ -13,11 +13,11 @@ type Continent struct {
 	Name string `json:"name"`
 }
 
-type CreateQuery struct {
+type CreateContinent struct {
 	Name string `json:"name"`
 }
 
-func Create(w http.ResponseWriter, r *http.Request) {
+func CreateNewContinent(w http.ResponseWriter, r *http.Request) {
 	// w is an instance of http.Request
 	// it allows handler function to write
 	// HTTP response back to client
@@ -25,10 +25,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// r is instance of the http.Request struct
 	// it represents the client's HTTP request
 	// to the server
-	var body CreateQuery
-	err := json.NewDecoder(r.Body).Decode(&body)
+	var body CreateContinent
 	// NewDecoder returns a new decoder that reads from r
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		log.Printf("error decoding request from body into CreateQuery struct: %v", err)
 		return
@@ -44,7 +43,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func GetAll(w http.ResponseWriter, r *http.Request) {
+func GetAllContinents(w http.ResponseWriter, r *http.Request) {
 	rows, err := DB.Query("SELECT * FROM Continents;")
 	// queries all rows in continents
 	if err != nil{
@@ -79,7 +78,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Write(continentsToSend)
 }
 
-func GetOne(w http.ResponseWriter, r *http.Request) {
+func GetOneContinent(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	// var continent Continent
 	queryResult := DB.QueryRow("SELECT Continent_id, name FROM Continents WHERE Continent_id = $1;", id)

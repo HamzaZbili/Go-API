@@ -12,7 +12,7 @@ CREATE TABLE Countries (
     Name text NOT NULL,
     Population text NOT NULL,
     Capital text NOT NULL,
-    Continent_id integer NOT NULL,
+    Continent integer NOT NULL,
     PRIMARY KEY (Country_id),
-    FOREIGN KEY (Continent_id) REFERENCES Continents(Continent_id)
+    FOREIGN KEY (Continent) REFERENCES Continents(Continent_id)
 );

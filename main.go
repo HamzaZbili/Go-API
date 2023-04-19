@@ -28,9 +28,11 @@ func main() {
 
 	r.Get("/", HealthCheck)
 
-	r.Post("/continents", Create)
-	r.Get("/continents/all", GetAll)
-	r.Get("/continents", GetOne)
+	r.Post("/continents", CreateNewContinent)
+	r.Get("/continents/all", GetAllContinents)
+	r.Get("/continents", GetOneContinent)
+
+	r.Post("/countries", CreateNewCountry)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
