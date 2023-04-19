@@ -7,7 +7,7 @@ import (
 )
 
 type Country struct {
-	Country int `json:"id"`
+	Country_id int `json:"id"`
 	Name string `json:"name"`
 	Poplation int `json:"population"`
 	Capital string `json:"capital"`
@@ -35,4 +35,36 @@ func CreateNewCountry (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func GetAllCountries(w http.ResponseWriter, r *http.Request) {
+	rows, err := DB.Query("SELECT * FROM Countries;")
+	if err != nil{
+		w.WriteHeader(http.StatusBadRequest)
+		log.Printf("Error querying all countries: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	var countriesSlice []Country
+
+	for rows.Next() {
+	// Next() iterates over rows
+		var country Country
+		if err := rows.Scan(&country.Country_id,
+			&country.Name, &country.Poplation, &country.Capital,
+			&country.Continent); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error looping countries row: %v", err)
+		}
+		countriesSlice = append(countriesSlice, country)
+	}
+	continentsToSend, err := json.Marshal(countriesSlice)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error marshalling countries into json %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(continentsToSend)
 }

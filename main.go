@@ -33,6 +33,7 @@ func main() {
 	r.Get("/continents", GetOneContinent)
 
 	r.Post("/countries", CreateNewCountry)
+	r.Get("/countries", GetAllCountries)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
