@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http" // provides an HTTP client and server implementation
 )
@@ -11,26 +13,8 @@ type Continent struct {
 	Name string `json:"name"`
 }
 
-type CreateContinent struct {
+type CreateQuery struct {
 	Name string `json:"name"`
-}
-
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-	// convention
-	// w - response writer 
-	// r - for request
-	var rootMessage Notification
-	rootMessage.Message = "all good here!"
-	response, err := json.Marshal(rootMessage.Message)
-	// Marshal() takes a Go value as an input and
-	// returns a byte slice and an error
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("error marshalling welcome message into json %v", err)
-		return
-	}
-	w.WriteHeader(http.StatusAccepted)
-	w.Write(response)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -41,12 +25,12 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	// r is instance of the http.Request struct
 	// it represents the client's HTTP request
 	// to the server
-	var body CreateContinent
+	var body CreateQuery
 	err := json.NewDecoder(r.Body).Decode(&body)
 	// NewDecoder returns a new decoder that reads from r
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		log.Printf("error decoding request from body into CreateContinent struct: %v", err)
+		log.Printf("error decoding request from body into CreateQuery struct: %v", err)
 		return
 	}
 	// below assigns err to result from query
@@ -71,7 +55,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close() // releases any resources held by the rows
 	// rows returns continents as slice
 
-	var continents []Continent
+	var continentsSlice []Continent
 
 	for rows.Next() {
 	// Next() iterates over rows
@@ -83,15 +67,38 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Error loopin continents row: %v", err)
 		}
 		// appends to continents array
-		continents = append(continents, continent)
+		continentsSlice = append(continentsSlice, continent)
 	}
-	response, err := json.Marshal(continents)
+	continentsToSend, err := json.Marshal(continentsSlice)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("error marshalling continents into json %v", err)
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
+	w.Write(continentsToSend)
+}
+
+func GetOne(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	// var continent Continent
+	queryResult := DB.QueryRow("SELECT Continent_id, name FROM Continents WHERE Continent_id = $1;", id)
+	var continent Continent
+	if err := queryResult.Scan(&continent.Continent_id, &continent.Name); err == sql.ErrNoRows {
+		// sql.ErrNoRows returned from Scan()
+		fmt.Println("No rows found")
+		return
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Error scanning continent row: %v", err)
+	}
+	response, err := json.Marshal(continent.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error marshalling Continent into json %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
 

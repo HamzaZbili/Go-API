@@ -1,10 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5" // router
 	// "github.com/go-chi/chi/v5/middleware"
 )
 
@@ -25,12 +26,29 @@ func main() {
 	// 	w.Write([]byte("Hello World!"))
 	// })
 
-	r.Post("/continents", Create)
-
 	r.Get("/", HealthCheck)
 
-	r.Get("/continents", GetAll)
+	r.Post("/continents", Create)
+	r.Get("/continents/all", GetAll)
+	r.Get("/continents", GetOne)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
 
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+	// convention
+	// w - response writer 
+	// r - for request
+	var rootMessage Notification
+	rootMessage.Message = "all good here!"
+	response, err := json.Marshal(rootMessage.Message)
+	// Marshal() takes a Go value as an input and
+	// returns a byte slice and an error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("error marshalling welcome message into json %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(response)
+}
