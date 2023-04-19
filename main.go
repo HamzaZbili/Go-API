@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -35,6 +36,8 @@ func main() {
 	r.Post("/countries", CreateNewCountry)
 	r.Get("/countries/all", GetAllCountries)
 	r.Get("/countries", GetCountriesInContinent)
+	r.Patch("/countries", UpdateCountry)
+	r.Delete("/countries", DeleteCountry)
 	
 	http.ListenAndServe("localhost:5000", r)
 }
@@ -50,7 +53,7 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	// returns a byte slice and an error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("error marshalling welcome message into json %v", err)
+		fmt.Printf("error marshalling welcome message into json %v", err)
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
