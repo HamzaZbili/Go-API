@@ -29,10 +29,13 @@ func main() {
 
 	r.Get("/", HealthCheck)
 
+	// continentries routes
 	r.Post("/continents", CreateNewContinent)
 	r.Get("/continents/all", GetAllContinents)
 	r.Get("/continents", GetOneContinent)
+	r.Delete("/continents", DeleteContinent)
 
+	// countries routes
 	r.Post("/countries", CreateNewCountry)
 	r.Get("/countries/all", GetAllCountries)
 	r.Get("/countries", GetCountriesInContinent)

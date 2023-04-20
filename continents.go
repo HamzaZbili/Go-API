@@ -36,7 +36,7 @@ func CreateNewContinent(w http.ResponseWriter, r *http.Request) {
 	// returns error if var is nil
 	if err := DB.QueryRow("INSERT INTO Continents (name) VALUES ($1);", body.Name).Err(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Printf("StatusInternalServerError %v", err)
+		fmt.Printf("Error creating continent: %v", err)
 		return
 	}
 	// WriteHeader used for building response to client
@@ -85,7 +85,7 @@ func GetOneContinent(w http.ResponseWriter, r *http.Request) {
 	var continent Continent
 	if err := queryResult.Scan(&continent.Continent_id, &continent.Name); err != nil{
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Println("No rows found")
+		fmt.Println("No rows found in get one continent query")
 		return
 	} else if err == sql.ErrNoRows {
 				// sql.ErrNoRows returned from Scan()
@@ -102,6 +102,48 @@ func GetOneContinent(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+// deletes continent and all countries with continent id
+func DeleteContinent(w http.ResponseWriter, r *http.Request){
+	id := r.URL.Query().Get("id")
+	    if id == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        fmt.Println("query parameter id missing")
+        return
+    }
+	result, err := DB.Exec(
+		// CTE (common table expressions)
+		// WITH -> writes auxiliary statements for use in a larger query
+        `WITH deleted_countries AS (
+            DELETE FROM Countries
+            WHERE Continent = $1
+            RETURNING *
+        )
+        DELETE FROM Continents
+        WHERE Continent_id = $1
+        RETURNING *;`, id)
+		// RETURNING *; -> assigns changes to result
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Printf("Error executing delete continent %v", err)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        fmt.Printf("error getting rows affected by continent delete: %v", err)
+        return
+    }
+
+	if rowsAffected == 0 {
+        w.WriteHeader(http.StatusNotFound)
+        fmt.Printf("Continent with id %s not found", id)
+        return
+    }
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Printf("Continent deleted: %v", id)
+}
 
 
 

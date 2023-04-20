@@ -33,7 +33,7 @@ func CreateNewCountry (w http.ResponseWriter, r *http.Request) {
 	VALUES ($1, $2, $3, $4);`,
 	body.Name, body.Population, body.Capital, body.Continent).Err(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Printf("StatusInternalServerError %v", err)
+		fmt.Printf(" %v", err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -163,7 +163,7 @@ func DeleteCountry(w http.ResponseWriter, r *http.Request){
 		WHERE Country_id = $1;`, id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Printf("StatusInternalServerError %v", err)
+		fmt.Printf("Error deleting country: %v", err)
 		return
 	}
 
